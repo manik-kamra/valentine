@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dollie 💘</title>
+  <style>
+    :root {
+      --bg1: #ffe6ef;
+      --bg2: #fff6fb;
+      --text: #2a2a2a;
+      --yes: #ff4d8d;
+      --no: #444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      overflow: hidden;
+    }
+    .card {
+      width: min(560px, 92vw);
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 20px;
+      padding: 28px 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      text-align: center;
+      position: relative;
+    }
+    h1 {
+      font-size: clamp(24px, 3.5vw, 34px);
+      margin: 0 0 10px;
+    }
+    p {
+      margin: 0 0 18px;
+      opacity: 0.85;
+    }
+
+    .stage {
+      position: relative;
+      height: 120px;
+      margin: 14px 0 6px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.55);
+      border: 1px dashed rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .btn {
+      border: 0;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .btn:active { transform: translate(-50%, -50%) scale(0.98); }
+
+    #yesBtn {
+      left: 35%;
+      background: var(--yes);
+      color: white;
+      box-shadow: 0 8px 18px rgba(255, 77, 141, 0.35);
+    }
+    #yesBtn:hover { filter: brightness(1.05); }
+
+    #noBtn {
+      left: 65%;
+      background: #f1f1f1;
+      color: var(--no);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      padding: 16px 14px;
+      border-radius: 16px;
+      background: rgba(255, 77, 141, 0.08);
+      border: 1px solid rgba(255, 77, 141, 0.18);
+    }
+    .result h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    /* floating hearts */
+    .heart {
+      position: absolute;
+      font-size: 18px;
+      opacity: 0.9;
+      animation: floatUp 1400ms ease-out forwards;
+      pointer-events: none;
+      filter: drop-shadow(0 6px 8px rgba(0,0,0,0.08));
+    }
+    @keyframes floatUp {
+      0%   { transform: translate(-50%, 0) scale(1); opacity: 0.95; }
+      100% { transform: translate(-50%, -140px) scale(1.35); opacity: 0; }
+    }
+
+    .tiny {
+      font-size: 12px;
+      opacity: 0.65;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Dollie, will you be my Valentine’s? 💘</h1>
+    <p>You only have one correct option.</p>
+
+    <div class="stage" id="stage" aria-label="Buttons area">
+      <button class="btn" id="yesBtn">Yes 💖</button>
+      <button class="btn" id="noBtn">No 🙃</button>
+    </div>
+
+    <div class="result" id="result" role="status" aria-live="polite">
+      <h2>Yay!! 🥰</h2>
+      <div id="resultText"></div>
+    </div>
+
+    <div class="tiny">Tip: host this on GitHub Pages / Netlify and send her the link.</div>
+  </div>
+
+  <script>
+    const stage = document.getElementById("stage");
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const result = document.getElementById("result");
+    const resultText = document.getElementById("resultText");
+
+    // Keep track of where "No" is, so it doesn't jump outside the stage.
+    function placeNoRandomly() {
+      const sRect = stage.getBoundingClientRect();
+      const bRect = noBtn.getBoundingClientRect();
+
+      const padding = 10;
+      const minX = padding;
+      const maxX = sRect.width - bRect.width - padding;
+      const minY = padding;
+      const maxY = sRect.height - bRect.height - padding;
+
+      const x = Math.max(minX, Math.min(maxX, Math.random() * maxX));
+      const y = Math.max(minY, Math.min(maxY, Math.random() * maxY));
+
+      // convert to percentage-ish positioning via px offsets
+      noBtn.style.left = (x + bRect.width / 2) + "px";
+      noBtn.style.top  = (y + bRect.height / 2) + "px";
+      noBtn.style.transform = "translate(-50%, -50%)";
+    }
+
+    // Make the No button run away.
+    function evade() {
+      placeNoRandomly();
+      popHeartNear(noBtn, "💗");
+    }
+
+    // For mouse users
+    noBtn.addEventListener("mouseenter", evade);
+    // For touch users (hover doesn't exist)
+    noBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      evade();
+    }, { passive: false });
+
+    // On load, nudge the No button once so it’s not perfectly aligned.
+    window.addEventListener("load", placeNoRandomly);
+    window.addEventListener("resize", placeNoRandomly);
+
+    // Yes click: reveal a message + hearts
+    yesBtn.addEventListener("click", () => {
+      result.style.display = "block";
+      resultText.innerHTML = `
+        <p>
+          You’re my favorite person. I’m taking you out for something nice 💐<br/>
+          <strong>Date:</strong> Anytime you say. <strong>Dress code:</strong> Gorgeous (as always).
+        </p>
+        <p>
+          Screenshot this and send “YES” to me 😌
+        </p>
+      `;
+
+      for (let i = 0; i < 18; i++) {
+        setTimeout(() => popHeartRandom(), i * 60);
+      }
+
+      // Optional: disable buttons after success
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      yesBtn.style.cursor = "default";
+      noBtn.style.cursor = "default";
+    });
+
+    function popHeartNear(el, emoji="💘") {
+      const rect = el.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      spawnHeart(x, y, emoji);
+    }
+
+    function popHeartRandom() {
+      const x = Math.random() * window.innerWidth;
+      const y = window.innerHeight - 40 - Math.random() * 80;
+      const emojis = ["💖","💗","💘","💕","💞"];
+      spawnHeart(x, y, emojis[Math.floor(Math.random() * emojis.length)]);
+    }
+
+    function spawnHeart(x, y, emoji) {
+      const h = document.createElement("div");
+      h.className = "heart";
+      h.textContent = emoji;
+      h.style.left = x + "px";
+      h.style.top = y + "px";
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 1500);
+    }
+  </script>
+</body>
+</html>
